@@ -1,0 +1,28 @@
+package br.com.systemcommerce.pos.audit;
+
+/** Códigos canônicos dos eventos de auditoria do PDV. */
+public enum PosAuditEventCode {
+    CASH_OPEN,
+    CASH_OPEN_DENIED,
+    CASH_CLOSE,
+    CASH_CLOSE_DIFFERENCE,
+    CASH_SUPPLY,
+    CASH_WITHDRAWAL,
+    CASH_AUTHORIZATION,
+    SALE_ITEM_ADD,
+    SALE_ITEM_REMOVE,
+    SALE_ITEM_QTY_CHANGE,
+    DISCOUNT_REQUESTED,
+    DISCOUNT_APPROVED,
+    DISCOUNT_DENIED,
+    SALE_SUSPEND,
+    SALE_RESUME,
+    PAYMENT,
+    PAYMENT_ATTEMPT,
+    SALE_CANCEL,
+    PAYMENT_REFUND,
+    RECEIPT_PRINT,
+    RECEIPT_REPRINT,
+    SETTINGS_CHANGE,
+    ADMIN_ACCESS
+}

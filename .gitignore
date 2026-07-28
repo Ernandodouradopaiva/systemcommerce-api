@@ -1,0 +1,50 @@
+# Build
+target/
+bin/
+!.mvn/wrapper/maven-wrapper.jar
+.mvn/wrapper/maven-wrapper.jar.download
+
+# IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+*.swp
+*.swo
+.project
+.classpath
+.settings/
+.bin/
+
+# OS
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Env / secrets
+.env
+.env.local
+.env.*.local
+.env.prod
+!.env.example
+!.env.prod.example
+*.pem
+*.key
+
+# Logs
+*.log
+logs/
+
+# Test / coverage
+.coverage
+coverage/
+*.exec
+
+# Misc
+*.class
+*.jar
+*.war
+*.ear
+hs_err_pid*
+replay_pid*

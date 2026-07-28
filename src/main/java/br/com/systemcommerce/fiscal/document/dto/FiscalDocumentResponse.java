@@ -1,0 +1,49 @@
+package br.com.systemcommerce.fiscal.document.dto;
+
+import br.com.systemcommerce.fiscal.document.FiscalDocumentStatus;
+import br.com.systemcommerce.fiscal.document.entity.FiscalDocument;
+import br.com.systemcommerce.fiscal.establishment.entity.FiscalEstablishment;
+import br.com.systemcommerce.fiscal.party.PartyType;
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.util.List;
+import java.util.UUID;
+
+public record FiscalDocumentResponse(
+        UUID id,
+        UUID organizationId,
+        UUID establishmentId,
+        UUID storeId,
+        String model,
+        String series,
+        Long number,
+        String accessKey,
+        FiscalEstablishment.FiscalEnvironment environment,
+        Instant issueDateTime,
+        Instant entryExitDateTime,
+        String natureOfOperation,
+        String purpose,
+        UUID operationId,
+        FiscalDocument.DocumentDirection direction,
+        PartyType recipientPartyType,
+        UUID recipientPartyId,
+        String recipientSnapshotJson,
+        String emitterSnapshotJson,
+        UUID carrierId,
+        BigDecimal totalProducts,
+        BigDecimal totalDiscount,
+        BigDecimal totalFreight,
+        BigDecimal totalTax,
+        BigDecimal totalInvoice,
+        UUID taxCalculationId,
+        FiscalDocumentStatus status,
+        String sefazCstat,
+        String sefazXmotivo,
+        String idempotencyKey,
+        String originDocumentType,
+        UUID originDocumentId,
+        Boolean contingency,
+        List<FiscalDocumentItemResponse> items,
+        List<FiscalDocumentPaymentResponse> payments,
+        List<FiscalDocumentStatusHistoryResponse> statusHistory,
+        Instant createdAt) {}

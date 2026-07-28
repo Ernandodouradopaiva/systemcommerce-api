@@ -1,0 +1,51 @@
+# Stack da API: Spring Boot apontando para PostgreSQL externo.
+# Banco NÃO sobe neste compose (usar DATABASE_URL remoto / gerenciado).
+
+name: systemcommerce-api
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: systemcommerce-api:local
+    container_name: systemcommerce-api
+    restart: unless-stopped
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
+      SERVER_PORT: ${SERVER_PORT:-8080}
+      DATABASE_URL: ${DATABASE_URL}
+      DATABASE_USERNAME: ${DATABASE_USERNAME:-${POSTGRES_USER}}
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD:-${POSTGRES_PASSWORD}}
+      JWT_SECRET: ${JWT_SECRET:-change-me-systemcommerce-jwt-secret-key-min-256-bits-long}
+      APP_SECURITY_JWT_SECRET: ${JWT_SECRET:-change-me-systemcommerce-jwt-secret-key-min-256-bits-long}
+      JWT_ACCESS_EXPIRATION_MS: ${JWT_ACCESS_EXPIRATION_MS:-900000}
+      JWT_REFRESH_EXPIRATION_MS: ${JWT_REFRESH_EXPIRATION_MS:-604800000}
+      JWT_EXPIRATION_MS: ${JWT_EXPIRATION_MS:-900000}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:5173,http://127.0.0.1:5173,http://localhost:3000,http://127.0.0.1:3000}
+      ADMIN_SEED_ENABLED: ${ADMIN_SEED_ENABLED:-true}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@systemcommerce.local}
+      ADMIN_LOGIN: ${ADMIN_LOGIN:-admin}
+      ADMIN_NAME: ${ADMIN_NAME:-Administrador}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?Defina ADMIN_PASSWORD no arquivo .env}
+      SERVER_MAX_HTTP_REQUEST_HEADER_SIZE: "131072"
+      AUTH_RATE_LIMIT_ENABLED: ${AUTH_RATE_LIMIT_ENABLED:-true}
+      AUTH_RATE_LIMIT_LOGIN: ${AUTH_RATE_LIMIT_LOGIN:-20}
+      AUTH_RATE_LIMIT_REFRESH: ${AUTH_RATE_LIMIT_REFRESH:-30}
+      AUTH_RATE_LIMIT_FORGOT: ${AUTH_RATE_LIMIT_FORGOT:-10}
+      AUTH_RATE_LIMIT_RESET: ${AUTH_RATE_LIMIT_RESET:-10}
+    ports:
+      - "${SERVER_PORT:-8080}:8080"
+    networks:
+      - systemcommerce-api-net
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:8080/actuator/health || exit 1"]
+      interval: 20s
+      timeout: 5s
+      retries: 10
+      start_period: 90s
+
+networks:
+  systemcommerce-api-net:
+    name: systemcommerce-api-net
+    driver: bridge

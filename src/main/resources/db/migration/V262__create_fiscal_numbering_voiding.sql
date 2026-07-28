@@ -1,0 +1,98 @@
+-- V262: Numeração, reservas, lacunas e inutilização (Prompt 130)
+CREATE TABLE fiscal_number_sequences (
+    id                      UUID            NOT NULL,
+    establishment_id        UUID            NOT NULL,
+    model                   VARCHAR(10)     NOT NULL,
+    series                  VARCHAR(10)     NOT NULL,
+    environment             VARCHAR(20)     NOT NULL,
+    current_number          BIGINT          NOT NULL DEFAULT 0,
+    last_reserved_number    BIGINT          NULL,
+    status                  VARCHAR(20)     NOT NULL DEFAULT 'ACTIVE',
+    active                  BOOLEAN         NOT NULL DEFAULT TRUE,
+    created_at              TIMESTAMPTZ     NOT NULL DEFAULT (NOW() AT TIME ZONE 'UTC'),
+    updated_at              TIMESTAMPTZ     NOT NULL DEFAULT (NOW() AT TIME ZONE 'UTC'),
+    created_by              UUID            NULL,
+    updated_by              UUID            NULL,
+    version                 BIGINT          NOT NULL DEFAULT 0,
+    CONSTRAINT pk_fiscal_number_sequences PRIMARY KEY (id),
+    CONSTRAINT uk_fnsq_est_model_series_env UNIQUE (establishment_id, model, series, environment),
+    CONSTRAINT fk_fnsq_est FOREIGN KEY (establishment_id) REFERENCES fiscal_establishments (id),
+    CONSTRAINT ck_fnsq_model CHECK (model IN ('55', '65')),
+    CONSTRAINT ck_fnsq_env CHECK (environment IN ('HOMOLOGATION', 'PRODUCTION')),
+    CONSTRAINT ck_fnsq_status CHECK (status IN ('ACTIVE', 'LOCKED'))
+);
+
+CREATE TABLE fiscal_number_reservations (
+    id                      UUID            NOT NULL,
+    sequence_id             UUID            NOT NULL,
+    number                  BIGINT          NOT NULL,
+    reserved_at             TIMESTAMPTZ     NOT NULL DEFAULT (NOW() AT TIME ZONE 'UTC'),
+    expires_at              TIMESTAMPTZ     NULL,
+    document_id             UUID            NULL,
+    status                  VARCHAR(20)     NOT NULL DEFAULT 'RESERVED',
+    idempotency_key         VARCHAR(100)    NULL,
+    active                  BOOLEAN         NOT NULL DEFAULT TRUE,
+    created_at              TIMESTAMPTZ     NOT NULL DEFAULT (NOW() AT TIME ZONE 'UTC'),
+    updated_at              TIMESTAMPTZ     NOT NULL DEFAULT (NOW() AT TIME ZONE 'UTC'),
+    created_by              UUID            NULL,
+    updated_by              UUID            NULL,
+    version                 BIGINT          NOT NULL DEFAULT 0,
+    CONSTRAINT pk_fiscal_number_reservations PRIMARY KEY (id),
+    CONSTRAINT uk_fnr_seq_number UNIQUE (sequence_id, number),
+    CONSTRAINT fk_fnr_seq FOREIGN KEY (sequence_id) REFERENCES fiscal_number_sequences (id),
+    CONSTRAINT fk_fnr_doc FOREIGN KEY (document_id) REFERENCES fiscal_documents (id),
+    CONSTRAINT ck_fnr_status CHECK (status IN ('RESERVED', 'CONSUMED', 'RELEASED', 'EXPIRED'))
+);
+
+CREATE TABLE fiscal_number_gaps (
+    id                      UUID            NOT NULL,
+    sequence_id             UUID            NOT NULL,
+    from_number             BIGINT          NOT NULL,
+    to_number               BIGINT          NOT NULL,
+    detected_at             TIMESTAMPTZ     NOT NULL DEFAULT (NOW() AT TIME ZONE 'UTC'),
+    reason                  VARCHAR(200)    NULL,
+    status                  VARCHAR(20)     NOT NULL DEFAULT 'OPEN',
+    notes                   VARCHAR(2000)   NULL,
+    active                  BOOLEAN         NOT NULL DEFAULT TRUE,
+    created_at              TIMESTAMPTZ     NOT NULL DEFAULT (NOW() AT TIME ZONE 'UTC'),
+    updated_at              TIMESTAMPTZ     NOT NULL DEFAULT (NOW() AT TIME ZONE 'UTC'),
+    created_by              UUID            NULL,
+    updated_by              UUID            NULL,
+    version                 BIGINT          NOT NULL DEFAULT 0,
+    CONSTRAINT pk_fiscal_number_gaps PRIMARY KEY (id),
+    CONSTRAINT fk_fng_seq FOREIGN KEY (sequence_id) REFERENCES fiscal_number_sequences (id),
+    CONSTRAINT ck_fng_status CHECK (status IN ('OPEN', 'UNDER_REVIEW', 'VOIDED', 'CLOSED')),
+    CONSTRAINT ck_fng_range CHECK (to_number >= from_number)
+);
+
+CREATE TABLE fiscal_number_voiding_requests (
+    id                      UUID            NOT NULL,
+    establishment_id        UUID            NOT NULL,
+    model                   VARCHAR(10)     NOT NULL,
+    series                  VARCHAR(10)     NOT NULL,
+    environment             VARCHAR(20)     NOT NULL,
+    from_number             BIGINT          NOT NULL,
+    to_number               BIGINT          NOT NULL,
+    justification           VARCHAR(500)    NOT NULL,
+    status                  VARCHAR(20)     NOT NULL DEFAULT 'DRAFT',
+    protocol_number         VARCHAR(60)     NULL,
+    sefaz_cstat             VARCHAR(10)     NULL,
+    sefaz_xmotivo           VARCHAR(500)    NULL,
+    xml_event_ref           TEXT            NULL,
+    transmitted_at          TIMESTAMPTZ     NULL,
+    idempotency_key         VARCHAR(100)    NOT NULL,
+    active                  BOOLEAN         NOT NULL DEFAULT TRUE,
+    created_at              TIMESTAMPTZ     NOT NULL DEFAULT (NOW() AT TIME ZONE 'UTC'),
+    updated_at              TIMESTAMPTZ     NOT NULL DEFAULT (NOW() AT TIME ZONE 'UTC'),
+    created_by              UUID            NULL,
+    updated_by              UUID            NULL,
+    version                 BIGINT          NOT NULL DEFAULT 0,
+    CONSTRAINT pk_fiscal_number_voiding_requests PRIMARY KEY (id),
+    CONSTRAINT uk_fnvr_idem UNIQUE (idempotency_key),
+    CONSTRAINT fk_fnvr_est FOREIGN KEY (establishment_id) REFERENCES fiscal_establishments (id),
+    CONSTRAINT ck_fnvr_status CHECK (status IN ('DRAFT', 'QUEUED', 'SENT', 'AUTHORIZED', 'REJECTED', 'ERROR')),
+    CONSTRAINT ck_fnvr_just CHECK (char_length(justification) >= 15),
+    CONSTRAINT ck_fnvr_range CHECK (to_number >= from_number)
+);
+
+COMMENT ON TABLE fiscal_number_voiding_requests IS 'Inutilização de numeração (Prompt 130) — não confundir com cancelamento de DFe autorizado';

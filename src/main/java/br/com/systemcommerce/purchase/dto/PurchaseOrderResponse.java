@@ -1,0 +1,52 @@
+package br.com.systemcommerce.purchase.dto;
+
+import br.com.systemcommerce.purchase.entity.PurchaseOrder;
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.UUID;
+
+public record PurchaseOrderResponse(
+        UUID id,
+        String orderNumber,
+        UUID organizationId,
+        UUID storeId,
+        String storeCode,
+        UUID destinationStoreId,
+        String destinationStoreCode,
+        UUID warehouseId,
+        String warehouseCode,
+        UUID supplierId,
+        String supplierName,
+        UUID buyerUserId,
+        String buyerName,
+        UUID purchaseQuotationId,
+        String purchaseQuotationNumber,
+        PurchaseOrder.PurchaseOrderStatus status,
+        LocalDate expectedDate,
+        Instant issuedAt,
+        String notes,
+        String paymentCondition,
+        String carrierName,
+        String freightModality,
+        BigDecimal subtotalAmount,
+        BigDecimal discountAmount,
+        BigDecimal freightAmount,
+        BigDecimal taxAmount,
+        BigDecimal insuranceAmount,
+        BigDecimal expenseAmount,
+        BigDecimal totalAmount,
+        Integer revisionNumber,
+        Boolean approvalRequired,
+        BigDecimal approvalThresholdAmount,
+        Boolean allowOverReceipt,
+        List<PurchaseOrderItemResponse> items,
+        boolean canEdit,
+        boolean canRevise,
+        boolean canCancel,
+        boolean canSend,
+        boolean canApprove,
+        Long version,
+        Instant createdAt,
+        Instant updatedAt) {}

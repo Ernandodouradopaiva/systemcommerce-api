@@ -1,0 +1,108 @@
+@baseUrl = http://localhost:8080
+@adminLogin = {{ADMIN_LOGIN}}
+@adminPassword = {{ADMIN_PASSWORD}}
+@accessToken = {{ACCESS_TOKEN}}
+@refreshToken = {{REFRESH_TOKEN}}
+
+### Health
+GET {{baseUrl}}/api/v1/health
+
+### Actuator health
+GET {{baseUrl}}/actuator/health
+
+### Login — defina ADMIN_LOGIN e ADMIN_PASSWORD no ambiente do REST Client
+# @name login
+POST {{baseUrl}}/api/v1/auth/login
+Content-Type: application/json
+
+{
+  "username": "{{adminLogin}}",
+  "password": "{{adminPassword}}"
+}
+
+### Refresh
+POST {{baseUrl}}/api/v1/auth/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": "{{refreshToken}}"
+}
+
+### Dashboard
+GET {{baseUrl}}/api/v1/dashboard?periodDays=14&topLimit=5
+Authorization: Bearer {{accessToken}}
+
+### Listar clientes
+GET {{baseUrl}}/api/v1/customers?page=0&size=20
+Authorization: Bearer {{accessToken}}
+
+### Criar cliente PF (ajuste o documento para um CPF válido)
+POST {{baseUrl}}/api/v1/customers
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "type": "PF",
+  "name": "Cliente Exemplo",
+  "document": "52998224725",
+  "email": "cliente.exemplo@example.com"
+}
+
+### Listar produtos
+GET {{baseUrl}}/api/v1/products?page=0&size=20&status=ACTIVE
+Authorization: Bearer {{accessToken}}
+
+### Entrada de estoque
+POST {{baseUrl}}/api/v1/inventory/entries
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "productId": "{{productId}}",
+  "quantity": 10,
+  "observation": "Entrada inicial",
+  "futureReturn": false
+}
+
+### Criar venda (rascunho)
+POST {{baseUrl}}/api/v1/sales
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "customerId": null,
+  "notes": null
+}
+
+### Confirmar venda
+POST {{baseUrl}}/api/v1/sales/{{saleId}}/confirm
+Authorization: Bearer {{accessToken}}
+
+### Registrar pagamento
+POST {{baseUrl}}/api/v1/payments
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "saleId": "{{saleId}}",
+  "method": "PIX",
+  "amount": 100.00,
+  "confirmImmediately": true
+}
+
+### Cancelar venda
+POST {{baseUrl}}/api/v1/sales/{{saleId}}/cancel
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "reason": "Cancelamento de teste"
+}
+
+### Logout
+POST {{baseUrl}}/api/v1/auth/logout
+Content-Type: application/json
+
+{
+  "refreshToken": "{{refreshToken}}"
+}

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Produção (containers): logs em stdout — retenção no coletor (Docker/K8s/ELK), tipicamente 14–30 dias.
+  Arquivo opcional: defina logging.file.name / LOG_FILE (ex.: /var/log/systemcommerce/api.log).
+  Política de arquivo (quando LOG_FILE definido via Spring Boot):
+    max-history=30 dias, max-file-size=100MB, total-size-cap=3GB (ver application-prod.yml).
+-->
+<configuration>
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+    <include resource="org/springframework/boot/logging/logback/console-appender.xml"/>
+
+    <springProfile name="prod">
+        <appender name="CONSOLE_PROD" class="ch.qos.logback.core.ConsoleAppender">
+            <encoder>
+                <pattern>%d{yyyy-MM-dd'T'HH:mm:ss.SSSXXX} %-5level [%thread] [correlationId=%X{correlationId}] %logger{36} - %msg%n</pattern>
+                <charset>UTF-8</charset>
+            </encoder>
+        </appender>
+        <root level="WARN">
+            <appender-ref ref="CONSOLE_PROD"/>
+        </root>
+        <logger name="br.com.systemcommerce" level="INFO"/>
+        <logger name="org.flywaydb" level="INFO"/>
+        <logger name="com.zaxxer.hikari" level="INFO"/>
+        <logger name="org.springframework.security" level="WARN"/>
+        <logger name="org.hibernate.SQL" level="WARN"/>
+    </springProfile>
+
+    <springProfile name="!prod">
+        <root level="INFO">
+            <appender-ref ref="CONSOLE"/>
+        </root>
+    </springProfile>
+</configuration>

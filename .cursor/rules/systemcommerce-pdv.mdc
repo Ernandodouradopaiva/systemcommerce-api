@@ -1,0 +1,46 @@
+---
+description: Orientação permanente PDV na API (Prompt 55) — transação, idempotência, concorrência
+alwaysApply: true
+---
+
+# PDV — SystemCommerce-api
+
+O PDV **não** é um terceiro projeto. Reutilizar cadastros e domínio comercial existentes.
+Venda PDV = `Sale` com `channel = POS` + `CashSession` — **não** duplicar tabelas comerciais.
+
+## Antes de codificar — impacto
+
+1. **ERP** — cadastros compartilhados, listagens, dashboard, relatórios, permissões.
+2. **Backend** — services, DTOs, transações, idempotência, concorrência, auditoria.
+3. **Banco** — schema Flyway; seeds se necessário.
+4. **Contrato HTTP** — o front só consome; totais/flags oficiais saem da API.
+
+## Procedimento
+
+```
+impacto (ERP/API/DB)
+  → migration (+ seeds se preciso)
+  → regra na API (@Transactional)
+  → idempotência / concorrência quando mutação crítica
+  → endpoints + OpenAPI
+  → testes unitários + integração (+ E2E se fluxo de operador)
+  → documentação
+  → build/testes verdes
+  → checklist
+```
+
+Checklist: migration → seeds → regra → `@Transactional` → idempotência → concorrência → DTO/endpoint → OpenAPI → testes → `../DOCUMENTATION.md` → build → checklist.
+
+## Fonte da verdade (API)
+
+Preço, totais, descontos, troco, estoque, caixa, autorização, cancelamento, conclusão de venda/pagamento — **somente** na API.
+
+## Proibido
+
+- Apagar movimentações ou vendas concluídas.
+- Armazenar PAN/CVV.
+- Permitir caixa sem sessão / venda fora de terminal válido.
+- Ignorar idempotência ou concorrência em mutações críticas.
+- Schema sem Flyway; avançar com testes falhando.
+
+Referências em `../DOCUMENTATION.md`: `docs/PDV_RULES.md`, `docs/PDV_ARCHITECTURE.md`, `ERP_PDV_INTEGRATION_REPORT.md`, `PDV_FINAL_CHECKLIST.md`.

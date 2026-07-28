@@ -1,0 +1,21 @@
+-- Exemplo: role de aplicação com privilégio mínimo (PostgreSQL).
+-- Execute como superuser do banco APÓS o primeiro Flyway (schema criado).
+-- Substitua <APP_DB_USER> e <APP_DB_PASSWORD> por valores do cofre de secrets.
+-- NÃO use este role para rodar migrations (use um migrator separado ou o owner do schema).
+
+-- CREATE ROLE <APP_DB_USER> LOGIN PASSWORD '<APP_DB_PASSWORD>' NOSUPERUSER NOCREATEDB NOCREATEROLE;
+-- GRANT CONNECT ON DATABASE systemcommerce TO <APP_DB_USER>;
+-- GRANT USAGE ON SCHEMA public TO <APP_DB_USER>;
+-- GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO <APP_DB_USER>;
+-- GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO <APP_DB_USER>;
+-- ALTER DEFAULT PRIVILEGES IN SCHEMA public
+--   GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO <APP_DB_USER>;
+-- ALTER DEFAULT PRIVILEGES IN SCHEMA public
+--   GRANT USAGE, SELECT ON SEQUENCES TO <APP_DB_USER>;
+
+-- Role opcional só para Flyway (DDL):
+-- CREATE ROLE <FLYWAY_USER> LOGIN PASSWORD '<FLYWAY_PASSWORD>' NOSUPERUSER NOCREATEDB NOCREATEROLE;
+-- GRANT ALL ON SCHEMA public TO <FLYWAY_USER>;
+-- ... (ou execute migrations com o owner do schema em job controlado)
+
+SELECT 'Revise e descomente os comandos acima antes de executar.' AS notice;

@@ -1,0 +1,35 @@
+---
+description: Arquitetura multilojas na API — obrigatória em qualquer módulo novo
+alwaysApply: true
+---
+
+# Multiloja — SystemCommerce-api (Prompt 85)
+
+Antes de implementar **qualquer** módulo novo, responda internamente:
+
+1. O dado pertence à **organização** ou à **loja**?
+2. O dado pertence a um **depósito**?
+3. Precisa de visão **consolidada**?
+4. O usuário pode acessar **todas** as lojas?
+5. O profissional está **lotado** em qual loja?
+6. O vendedor está **autorizado** na loja?
+7. A operação veio do **ERP** ou do **PDV**?
+8. A configuração é **global** ou **local**?
+9. O relatório precisa de **filtro por loja**?
+10. A **auditoria** registra a loja?
+
+## Regras obrigatórias
+
+- Entidade operacional com contexto de organização e loja.
+- Toda query operacional valida a loja; nenhum UUID sem contexto.
+- Estoque pertence a depósito; venda pertence a loja; PDV a terminal+loja; caixa a sessão.
+- Transferência com origem e destino; relatório respeita acesso.
+- Teste deve incluir isolamento; migration preserva dados; regra só na API.
+- Nunca assumir loja única.
+
+## Projeto
+
+- Uma base PostgreSQL — isolamento lógico.
+- Front é projeto separado; autorização **não** é decidida no browser.
+- Docs: `../DOCUMENTATION.md` (seções `docs/MULTISTORE_*`).
+- Procedimento: migration → regra/transação/authz → DTO → testes (com isolamento) → docs → build → checklist.

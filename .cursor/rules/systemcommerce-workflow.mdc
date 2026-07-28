@@ -1,0 +1,45 @@
+---
+description: Procedimento obrigatório para alterações na SystemCommerce-api (projeto independente)
+alwaysApply: true
+---
+
+# SystemCommerce-api — orientação permanente
+
+Projeto independente. Integração com o front **somente** via HTTP. Não misturar regras de UI neste repositório.
+
+Antes de **qualquer** alteração, siga a ordem abaixo. Não pule etapas.
+
+## Procedimento obrigatório
+
+1. Ler arquitetura/docs em `../DOCUMENTATION.md` (seções da API: `SystemCommerce-api/ARCHITECTURE.md`, endpoints, permissões; checklists se impacto operacional).
+2. Ler requisitos do módulo afetado em `../DOCUMENTATION.md`.
+3. Identificar impactos: **backend**, **banco** (e contrato HTTP que o front consumirá).
+4. Identificar **migrations** Flyway e **testes** necessários.
+5. Implementar **primeiro** regras de negócio (services + `@Transactional`).
+6. Expor contratos via **DTOs/endpoints** (nunca entidade JPA).
+7. Atualizar testes da API.
+8. Atualizar `../DOCUMENTATION.md` (seção afetada).
+9. Executar build e testes; só então atualizar checklists se aplicável.
+
+## Proibido
+
+- Alterar tabela/coluna sem migration Flyway.
+- Expor entidade JPA em controller/response.
+- Armazenar senha sem BCrypt/hash.
+- Alterar saldo de estoque sem movimentação oficial.
+- Confirmar venda sem fluxo transacional oficial.
+- Avançar com testes falhando.
+- Entregar arquivo vazio / placeholder como conclusão.
+- Declarar concluído sem validar o fluxo afetado.
+
+## Independência
+
+- Este repositório: Spring Boot, PostgreSQL, JWT, Flyway.
+- Front (`SystemCommerce-front`): projeto separado; sem acesso ao banco.
+- Integração apenas via HTTP.
+
+## Ordem mental rápida
+
+```
+docs → impacto (api/db) → migration → regra na API → DTO/endpoint → testes → docs → build/test → checklist
+```

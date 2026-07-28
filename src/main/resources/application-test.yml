@@ -1,0 +1,35 @@
+spring:
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+  flyway:
+    enabled: true
+
+app:
+  security:
+    jwt:
+      secret: test-systemcommerce-jwt-secret-key-min-256-bits-long
+      access-expiration-ms: 3600000
+      refresh-expiration-ms: 86400000
+      expiration-ms: 3600000
+    auth:
+      max-failed-attempts: 5
+      lock-duration-minutes: 30
+      password-reset-expiration-minutes: 60
+    cors:
+      allowed-origins: http://localhost:5173,http://localhost:3000
+    rate-limit:
+      enabled: false
+  pos:
+    cash:
+      high-withdrawal-limit: 500.00
+    sale:
+      operator-discount-max-percent: 10
+
+logging:
+  level:
+    root: WARN
+    br.com.systemcommerce: INFO
+    org.testcontainers: INFO

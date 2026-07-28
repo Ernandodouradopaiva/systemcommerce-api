@@ -1,0 +1,138 @@
+-- V272: Distribuição DFe + manifestação do destinatário (Prompt 143)
+
+CREATE TABLE dfe_sequence_controls (
+    id                          UUID            NOT NULL,
+    organization_id             UUID            NOT NULL,
+    establishment_id            UUID            NOT NULL,
+    last_nsu                    BIGINT          NOT NULL DEFAULT 0,
+    max_nsu                     BIGINT          NULL,
+    last_query_at               TIMESTAMPTZ     NULL,
+    next_allowed_query_at       TIMESTAMPTZ     NULL,
+    query_interval_seconds      INT             NOT NULL DEFAULT 3600,
+    active                      BOOLEAN         NOT NULL DEFAULT TRUE,
+    created_at                  TIMESTAMPTZ     NOT NULL DEFAULT (NOW() AT TIME ZONE 'UTC'),
+    updated_at                  TIMESTAMPTZ     NOT NULL DEFAULT (NOW() AT TIME ZONE 'UTC'),
+    created_by                  UUID            NULL,
+    updated_by                  UUID            NULL,
+    version                     BIGINT          NOT NULL DEFAULT 0,
+    CONSTRAINT pk_dfe_sequence_controls PRIMARY KEY (id),
+    CONSTRAINT uk_dfe_seq_establishment UNIQUE (establishment_id),
+    CONSTRAINT fk_dfe_seq_org FOREIGN KEY (organization_id) REFERENCES organizations (id),
+    CONSTRAINT fk_dfe_seq_est FOREIGN KEY (establishment_id) REFERENCES fiscal_establishments (id)
+);
+
+CREATE TABLE dfe_distribution_queries (
+    id                          UUID            NOT NULL,
+    organization_id             UUID            NOT NULL,
+    establishment_id            UUID            NOT NULL,
+    requested_nsu               BIGINT          NOT NULL DEFAULT 0,
+    ult_nsu                     BIGINT          NULL,
+    max_nsu                     BIGINT          NULL,
+    cstat                       VARCHAR(10)     NULL,
+    xmotivo                     VARCHAR(255)    NULL,
+    status                      VARCHAR(20)     NOT NULL DEFAULT 'QUEUED',
+    documents_count             INT             NOT NULL DEFAULT 0,
+    latency_ms                  BIGINT          NULL,
+    correlation_id              VARCHAR(80)     NULL,
+    started_at                  TIMESTAMPTZ     NULL,
+    finished_at                 TIMESTAMPTZ     NULL,
+    active                      BOOLEAN         NOT NULL DEFAULT TRUE,
+    created_at                  TIMESTAMPTZ     NOT NULL DEFAULT (NOW() AT TIME ZONE 'UTC'),
+    updated_at                  TIMESTAMPTZ     NOT NULL DEFAULT (NOW() AT TIME ZONE 'UTC'),
+    created_by                  UUID            NULL,
+    updated_by                  UUID            NULL,
+    version                     BIGINT          NOT NULL DEFAULT 0,
+    CONSTRAINT pk_dfe_distribution_queries PRIMARY KEY (id),
+    CONSTRAINT fk_dfe_dq_org FOREIGN KEY (organization_id) REFERENCES organizations (id),
+    CONSTRAINT fk_dfe_dq_est FOREIGN KEY (establishment_id) REFERENCES fiscal_establishments (id),
+    CONSTRAINT ck_dfe_dq_status CHECK (status IN ('QUEUED', 'RUNNING', 'SUCCESS', 'ERROR', 'THROTTLED'))
+);
+
+CREATE TABLE dfe_distribution_documents (
+    id                          UUID            NOT NULL,
+    organization_id             UUID            NOT NULL,
+    establishment_id            UUID            NOT NULL,
+    query_id                    UUID            NULL,
+    nsu                         BIGINT          NOT NULL,
+    schema_type                 VARCHAR(40)     NOT NULL,
+    access_key                  VARCHAR(44)     NULL,
+    xml_content                 TEXT            NOT NULL,
+    xml_sha256                  VARCHAR(64)     NULL,
+    summary_json                TEXT            NULL,
+    suspicious                  BOOLEAN         NOT NULL DEFAULT FALSE,
+    suspicious_reason           VARCHAR(255)    NULL,
+    recognized                  BOOLEAN         NOT NULL DEFAULT FALSE,
+    incoming_document_id        UUID            NULL,
+    status                      VARCHAR(20)     NOT NULL DEFAULT 'SUMMARY',
+    active                      BOOLEAN         NOT NULL DEFAULT TRUE,
+    created_at                  TIMESTAMPTZ     NOT NULL DEFAULT (NOW() AT TIME ZONE 'UTC'),
+    updated_at                  TIMESTAMPTZ     NOT NULL DEFAULT (NOW() AT TIME ZONE 'UTC'),
+    created_by                  UUID            NULL,
+    updated_by                  UUID            NULL,
+    version                     BIGINT          NOT NULL DEFAULT 0,
+    CONSTRAINT pk_dfe_distribution_documents PRIMARY KEY (id),
+    CONSTRAINT uk_dfe_doc_est_nsu UNIQUE (establishment_id, nsu),
+    CONSTRAINT fk_dfe_dd_org FOREIGN KEY (organization_id) REFERENCES organizations (id),
+    CONSTRAINT fk_dfe_dd_est FOREIGN KEY (establishment_id) REFERENCES fiscal_establishments (id),
+    CONSTRAINT fk_dfe_dd_query FOREIGN KEY (query_id) REFERENCES dfe_distribution_queries (id),
+    CONSTRAINT fk_dfe_dd_incoming FOREIGN KEY (incoming_document_id) REFERENCES incoming_fiscal_documents (id),
+    CONSTRAINT ck_dfe_dd_status CHECK (status IN ('SUMMARY', 'XML_STORED', 'LINKED', 'IGNORED'))
+);
+
+CREATE INDEX idx_dfe_dd_access_key ON dfe_distribution_documents (access_key);
+CREATE INDEX idx_dfe_dd_est_status ON dfe_distribution_documents (establishment_id, status);
+
+CREATE TABLE recipient_manifestations (
+    id                          UUID            NOT NULL,
+    organization_id             UUID            NOT NULL,
+    establishment_id            UUID            NOT NULL,
+    distribution_document_id    UUID            NULL,
+    access_key                  VARCHAR(44)     NOT NULL,
+    current_type                VARCHAR(40)     NOT NULL DEFAULT 'NONE',
+    status                      VARCHAR(20)     NOT NULL DEFAULT 'DRAFT',
+    conclusive                  BOOLEAN         NOT NULL DEFAULT FALSE,
+    authorized_at               TIMESTAMPTZ     NULL,
+    protocol                    VARCHAR(60)     NULL,
+    justification               TEXT            NULL,
+    idempotency_key             VARCHAR(80)     NOT NULL,
+    active                      BOOLEAN         NOT NULL DEFAULT TRUE,
+    created_at                  TIMESTAMPTZ     NOT NULL DEFAULT (NOW() AT TIME ZONE 'UTC'),
+    updated_at                  TIMESTAMPTZ     NOT NULL DEFAULT (NOW() AT TIME ZONE 'UTC'),
+    created_by                  UUID            NULL,
+    updated_by                  UUID            NULL,
+    version                     BIGINT          NOT NULL DEFAULT 0,
+    CONSTRAINT pk_recipient_manifestations PRIMARY KEY (id),
+    CONSTRAINT uk_rm_idempotency UNIQUE (idempotency_key),
+    CONSTRAINT fk_rm_org FOREIGN KEY (organization_id) REFERENCES organizations (id),
+    CONSTRAINT fk_rm_est FOREIGN KEY (establishment_id) REFERENCES fiscal_establishments (id),
+    CONSTRAINT fk_rm_dist FOREIGN KEY (distribution_document_id) REFERENCES dfe_distribution_documents (id),
+    CONSTRAINT ck_rm_type CHECK (current_type IN ('NONE', 'SCIENCE', 'CONFIRMATION', 'UNKNOWN', 'NOT_PERFORMED')),
+    CONSTRAINT ck_rm_status CHECK (status IN ('DRAFT', 'QUEUED', 'AUTHORIZED', 'REJECTED', 'ERROR'))
+);
+
+CREATE INDEX idx_rm_access_key ON recipient_manifestations (access_key);
+
+CREATE TABLE recipient_manifestation_events (
+    id                          UUID            NOT NULL,
+    manifestation_id            UUID            NOT NULL,
+    event_type                  VARCHAR(40)     NOT NULL,
+    sequence                    INT             NOT NULL,
+    event_xml                   TEXT            NULL,
+    return_xml                  TEXT            NULL,
+    protocol                    VARCHAR(60)     NULL,
+    cstat                       VARCHAR(10)     NULL,
+    xmotivo                     VARCHAR(255)    NULL,
+    status                      VARCHAR(20)     NOT NULL DEFAULT 'DRAFT',
+    transmitted_at              TIMESTAMPTZ     NULL,
+    active                      BOOLEAN         NOT NULL DEFAULT TRUE,
+    created_at                  TIMESTAMPTZ     NOT NULL DEFAULT (NOW() AT TIME ZONE 'UTC'),
+    updated_at                  TIMESTAMPTZ     NOT NULL DEFAULT (NOW() AT TIME ZONE 'UTC'),
+    created_by                  UUID            NULL,
+    updated_by                  UUID            NULL,
+    version                     BIGINT          NOT NULL DEFAULT 0,
+    CONSTRAINT pk_recipient_manifestation_events PRIMARY KEY (id),
+    CONSTRAINT uk_rme_manifest_seq UNIQUE (manifestation_id, sequence),
+    CONSTRAINT fk_rme_manifest FOREIGN KEY (manifestation_id) REFERENCES recipient_manifestations (id) ON DELETE CASCADE,
+    CONSTRAINT ck_rme_type CHECK (event_type IN ('SCIENCE', 'CONFIRMATION', 'UNKNOWN', 'NOT_PERFORMED')),
+    CONSTRAINT ck_rme_status CHECK (status IN ('DRAFT', 'QUEUED', 'AUTHORIZED', 'REJECTED', 'ERROR'))
+);

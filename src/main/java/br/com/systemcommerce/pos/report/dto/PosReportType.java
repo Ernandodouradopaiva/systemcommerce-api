@@ -1,0 +1,27 @@
+package br.com.systemcommerce.pos.report.dto;
+
+/** Tipos de relatório PDV (JSON + CSV; PDF preparado). */
+public enum PosReportType {
+    SALES_BY_STORE,
+    SALES_BY_TERMINAL,
+    SALES_BY_OPERATOR,
+    SALES_BY_SESSION,
+    SALES_BY_PERIOD,
+    SALES_BY_HOUR,
+    AVERAGE_TICKET,
+    ITEMS_SOLD,
+    TOP_PRODUCTS,
+    DISCOUNTS,
+    DISCOUNTS_BY_OPERATOR,
+    CANCELLATIONS,
+    CANCELLED_ITEMS,
+    SUSPENDED_SALES,
+    PAYMENTS_BY_METHOD,
+    WITHDRAWALS,
+    SUPPLIES,
+    CASH_DIFFERENCES,
+    SESSIONS_OPEN,
+    SESSIONS_CLOSED,
+    AVG_SERVICE_TIME,
+    AVG_ITEMS_PER_SALE
+}
